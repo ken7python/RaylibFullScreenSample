@@ -31,7 +31,13 @@ void FullScreenFunc::drawTarget(RenderTexture2D* target) {
         this->scaledW = this->baseWidth * this->scale;
         this->scaledH = this->baseHeight * this->scale;
         this->offsetX = (this->windowWidth - this->scaledW) / 2;
-        this->offsetY = (this->windowHeight - this->scaledH) / 2;
+        //this->offsetY = (this->windowHeight - this->scaledH) / 2;
+        float aspect = (float)this->windowWidth / this->windowHeight;
+        if (aspect < 0.75f) {
+            this->offsetY = 0; // スマホ縦長比率なら上寄せ！
+        } else {
+            this->offsetY = (this->windowHeight - this->scaledH) / 2;
+        }
 
         DrawTexturePro(
             target->texture,
@@ -46,7 +52,11 @@ void FullScreenFunc::drawTarget(RenderTexture2D* target) {
 
 Vector2 FullScreenFunc::GetGameMouse() {
     #if defined(PLATFORM_WEB)
-        return GetMousePosition();
+        //return GetMousePosition();
+        Vector2 pos = IsMouseButtonDown(MOUSE_LEFT_BUTTON)
+        ? GetTouchPosition(0)
+        : GetMousePosition();
+        return pos;
     #else
         /*
         cout << this->offsetX << " " << this->offsetY << endl;

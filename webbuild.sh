@@ -1,6 +1,5 @@
 emcc base.cpp fullscreen.cpp \
     -o index.html \
-    -I/path/to/raylib/src \
     ./libraylib_web.a \
     -s USE_GLFW=3 \
     -s ASYNCIFY \
