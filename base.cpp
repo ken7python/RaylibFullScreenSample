@@ -1,3 +1,4 @@
+// c++ -std=c++11 base.cpp fullscreen.cpp -lraylib
 #include "raylib.h"
 #include "fullscreen.h"
 
