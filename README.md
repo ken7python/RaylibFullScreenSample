@@ -17,6 +17,13 @@
 
 以下のコマンドを使用してプログラムをビルドし、実行します。
 
+### PC版
 ```bash
 c++ -std=c++11 base.cpp fullscreen.cpp -lraylib
+```
+
+### Web版
+emccとpythonをシェルで使用しています
+```bash
+sh webbuild.sh
 ```
