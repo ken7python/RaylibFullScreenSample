@@ -16,59 +16,66 @@ T Clamp(T value, T min, T max) {
 void FullScreenFunc::init(int w, int h) {
     this->baseWidth = w;
     this->baseHeight = h;
+    #if defined(PLATFORM_WEB)
+        
+    #else
+        SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    #endif
+}
+
+void FullScreenFunc::DrawBegin(RenderTexture2D target) {
+    #if defined(PLATFORM_WEB)
+        BeginDrawing();
+    #else
+        BeginTextureMode(target); 
+    #endif
+}
+
+void FullScreenFunc::DrawEnd(RenderTexture2D* target) {
+    #if defined(PLATFORM_WEB)
+        EndDrawing();
+    #else
+        EndTextureMode();
+        this->drawTarget(target);
+    #endif
 }
 
 void FullScreenFunc::drawTarget(RenderTexture2D* target) {
     BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground((Color){34,34,34, 255} );
+        //ClearBackground(BLACK);
+            float screenW = (float)GetScreenWidth();
+            float screenH = (float)GetScreenHeight();
 
-        this->windowWidth = GetScreenWidth();
-        this->windowHeight = GetScreenHeight();
+            this->scale = fminf(screenW / this->baseWidth, screenH / this->baseHeight);
+            this->offsetX = (screenW - (this->baseWidth * this->scale)) * 0.5f;
+            this->offsetY = (screenH - (this->baseHeight * this->scale)) * 0.5f;
 
-        this->scale = fminf((float)this->windowWidth / this->baseWidth, (float)this->windowHeight / this->baseHeight);
-        if (this->scale < 0.01f) this->scale = 0.01f; // 安全のための最小スケール保証
+            DrawTexturePro(
+                target->texture,
+                (Rectangle){ 0.0f, 0.0f, (float)this->baseWidth, -(float)this->baseHeight }, // 上下反転
+                (Rectangle){ (float)this->offsetX, (float)this->offsetY, (float)(this->baseWidth * this->scale), (float)(this->baseHeight * this->scale) },
+                (Vector2){ 0, 0 },
+                0.0f,
+                WHITE
+            );
+        EndDrawing();
+}
 
-        this->scaledW = this->baseWidth * this->scale;
-        this->scaledH = this->baseHeight * this->scale;
-        this->offsetX = (this->windowWidth - this->scaledW) / 2;
-        //this->offsetY = (this->windowHeight - this->scaledH) / 2;
-        float aspect = (float)this->windowWidth / this->windowHeight;
-        if (aspect < 0.75f) {
-            this->offsetY = 0; // スマホ縦長比率なら上寄せ！
-        } else {
-            this->offsetY = (this->windowHeight - this->scaledH) / 2;
-        }
+Vector2 FullScreenFunc::ToVirtualMouse(Vector2 raw) {
+    float mx = (raw.x - this->offsetX) / this->scale;
+    float my = (raw.y - this->offsetY) / this->scale;
 
-        DrawTexturePro(
-            target->texture,
-            (Rectangle){ 0.0f, 0.0f, (float)this->baseWidth, -(float)this->baseHeight }, // 上下反転
-            (Rectangle){ (float)this->offsetX, (float)this->offsetY, (float)this->scaledW, (float)this->scaledH },
-            (Vector2){ 0, 0 },
-            0.0f,
-            WHITE
-        );
-    EndDrawing();
+    mx = Clamp(mx, 0.0f, (float)this->baseWidth);
+    my = Clamp(my, 0.0f, (float)this->baseHeight);
+
+    return (Vector2){ mx, my };
 }
 
 Vector2 FullScreenFunc::GetGameMouse() {
     #if defined(PLATFORM_WEB)
-        //return GetMousePosition();
-        Vector2 pos = IsMouseButtonDown(MOUSE_LEFT_BUTTON)
-        ? GetTouchPosition(0)
-        : GetMousePosition();
-        return pos;
+        return GetMousePosition();
     #else
-        /*
-        cout << this->offsetX << " " << this->offsetY << endl;
-        cout << this->scale << endl;
-        */
-        float mx = (GetMouseX() - this->offsetX) / this->scale;
-        float my = (GetMouseY() - this->offsetY) / this->scale;
-
-        // 範囲内に収める（Clampは raylib の関数）
-        mx = Clamp(mx, 0.0f, (float)this->baseWidth);
-        my = Clamp(my, 0.0f, (float)this->baseHeight);
-
-        return (Vector2){ mx, my };
+        return ToVirtualMouse(GetMousePosition());
     #endif
 }

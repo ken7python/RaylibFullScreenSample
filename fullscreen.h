@@ -20,7 +20,12 @@ struct FullScreenFunc {
     int offsetY;
 
     void init(int w, int h);
+
+    void DrawBegin(RenderTexture2D target);
+    void DrawEnd(RenderTexture2D* target);
+
     void drawTarget(RenderTexture2D* target);
+    Vector2 ToVirtualMouse(Vector2 raw);
     Vector2 GetGameMouse();
 };
 
